@@ -43,7 +43,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col justify-between">
 
-    <!-- Top Navigation Bar (Sistem Multi-Peran: Publik, Kasir, Teknisi, Laporan) -->
+    <!-- Top Navigation Bar (Sistem Multi-User Terintegrasi) -->
     <nav class="bg-white border-b border-slate-200 sticky top-0 z-40 no-print shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
@@ -63,48 +63,113 @@
                     </a>
                 </div>
 
-                <!-- Navigation Module Links (7 Fitur Terintegrasi) -->
-                <div class="hidden md:flex items-center gap-1 text-xs font-bold text-slate-600">
+                <!-- Navigation Module Links Berdasarkan Hak Akses Pengguna -->
+                <div class="hidden lg:flex items-center gap-1 text-xs font-bold text-slate-600">
+                    <!-- Tracking Publik (Bisa Diakses Siapa Saja) -->
                     <a href="{{ route('tracking.index') }}" class="px-3 py-2 rounded-lg transition {{ request()->routeIs('home', 'tracking.*') ? 'bg-sky-50 text-sky-700' : 'hover:bg-slate-100 hover:text-slate-900' }}">
                         🔍 Live Tracking
                     </a>
-                    <a href="{{ route('admin.index') }}" class="px-3 py-2 rounded-lg transition {{ request()->routeIs('admin.index', 'admin.create', 'admin.show') ? 'bg-sky-50 text-sky-700' : 'hover:bg-slate-100 hover:text-slate-900' }}">
-                        📝 Kasir & Penerimaan
-                    </a>
-                    <a href="{{ route('teknisi.index') }}" class="px-3 py-2 rounded-lg transition {{ request()->routeIs('teknisi.*') ? 'bg-sky-50 text-sky-700' : 'hover:bg-slate-100 hover:text-slate-900' }}">
-                        🔧 Work Order Teknisi
-                    </a>
-                    <a href="{{ route('admin.pembayaran') }}" class="px-3 py-2 rounded-lg transition {{ request()->routeIs('admin.pembayaran*') ? 'bg-sky-50 text-sky-700' : 'hover:bg-slate-100 hover:text-slate-900' }}">
-                        💳 Kasir Pembayaran
-                    </a>
-                    <a href="{{ route('admin.laporan') }}" class="px-3 py-2 rounded-lg transition {{ request()->routeIs('admin.laporan*') ? 'bg-sky-50 text-sky-700' : 'hover:bg-slate-100 hover:text-slate-900' }}">
-                        📊 Rekap & Laporan
-                    </a>
-                    <a href="{{ route('admin.whatsapp') }}" class="px-3 py-2 rounded-lg transition {{ request()->routeIs('admin.whatsapp*') ? 'bg-sky-50 text-sky-700' : 'hover:bg-slate-100 hover:text-slate-900' }}">
-                        🤖 WA Bot Log
-                    </a>
+
+                    @auth
+                        <!-- Kasir & Owner: Penerimaan Servis -->
+                        @if(auth()->user()->isKasir() || auth()->user()->isOwner())
+                            <a href="{{ route('admin.index') }}" class="px-3 py-2 rounded-lg transition {{ request()->routeIs('admin.index', 'admin.create', 'admin.show') ? 'bg-sky-50 text-sky-700' : 'hover:bg-slate-100 hover:text-slate-900' }}">
+                                📝 Kasir & Penerimaan
+                            </a>
+                            <a href="{{ route('admin.pembayaran') }}" class="px-3 py-2 rounded-lg transition {{ request()->routeIs('admin.pembayaran*') ? 'bg-sky-50 text-sky-700' : 'hover:bg-slate-100 hover:text-slate-900' }}">
+                                💳 Pembayaran
+                            </a>
+                        @endif
+
+                        <!-- Teknisi & Owner: Work Order & Diagnosa -->
+                        @if(auth()->user()->isTeknisi() || auth()->user()->isOwner())
+                            <a href="{{ route('teknisi.index') }}" class="px-3 py-2 rounded-lg transition {{ request()->routeIs('teknisi.*') ? 'bg-sky-50 text-sky-700' : 'hover:bg-slate-100 hover:text-slate-900' }}">
+                                🔧 Work Order Teknisi
+                            </a>
+                        @endif
+
+                        <!-- Owner: Laporan Rekapitulasi & Omset -->
+                        @if(auth()->user()->isOwner() || auth()->user()->isKasir())
+                            <a href="{{ route('admin.laporan') }}" class="px-3 py-2 rounded-lg transition {{ request()->routeIs('admin.laporan*') ? 'bg-sky-50 text-sky-700' : 'hover:bg-slate-100 hover:text-slate-900' }}">
+                                📊 Rekap Laporan
+                            </a>
+                        @endif
+
+                        <!-- Kasir & Owner: WhatsApp Log -->
+                        @if(auth()->user()->isKasir() || auth()->user()->isOwner())
+                            <a href="{{ route('admin.whatsapp') }}" class="px-3 py-2 rounded-lg transition {{ request()->routeIs('admin.whatsapp*') ? 'bg-sky-50 text-sky-700' : 'hover:bg-slate-100 hover:text-slate-900' }}">
+                                🤖 WA Log
+                            </a>
+                        @endif
+                    @endauth
                 </div>
 
-                <!-- Quick Action: Buat Servis Baru -->
-                <div class="flex items-center gap-2">
-                    <a href="{{ route('admin.create') }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs shadow-sm transition active:scale-95">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                        </svg>
-                        <span>+ Unit Baru</span>
-                    </a>
+                <!-- Right Header: User Profile Badge or Login Button -->
+                <div class="flex items-center gap-2.5">
+                    @auth
+                        <!-- Informasi User & Role Badge -->
+                        <div class="flex items-center gap-2 pl-2 border-l border-slate-200">
+                            <div class="text-right hidden sm:block">
+                                <div class="text-xs font-bold text-slate-900 leading-tight">{{ auth()->user()->name }}</div>
+                                <div class="flex items-center justify-end gap-1 mt-0.5">
+                                    <span class="inline-block w-1.5 h-1.5 rounded-full {{ auth()->user()->isTeknisi() ? 'bg-amber-500' : (auth()->user()->isOwner() ? 'bg-purple-500' : 'bg-sky-500') }}"></span>
+                                    <span class="text-[10px] font-semibold text-slate-500">{{ auth()->user()->getRoleLabel() }}</span>
+                                </div>
+                            </div>
+
+                            <span class="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-md border {{ auth()->user()->getRoleBadge() }}">
+                                {{ auth()->user()->role }}
+                            </span>
+
+                            <!-- Tombol Keluar / Logout -->
+                            <form action="{{ route('logout') }}" method="POST" class="inline">
+                                @csrf
+                                <button type="submit" title="Keluar dari sistem" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition active:scale-95">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Shortcut Tombol Sesuai Role -->
+                        @if(auth()->user()->isKasir() || auth()->user()->isOwner())
+                            <a href="{{ route('admin.create') }}" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs shadow-sm transition active:scale-95">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                                <span>+ Servis</span>
+                            </a>
+                        @endif
+                    @else
+                        <!-- Tampilan Jika Belum Login (Tamu / Pelanggan) -->
+                        <a href="{{ route('login') }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition active:scale-95">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                            </svg>
+                            <span>Masuk Petugas</span>
+                        </a>
+                    @endauth
                 </div>
 
             </div>
         </div>
 
-        <!-- Mobile Quick Switcher Bar -->
-        <div class="md:hidden border-t border-slate-100 px-3 py-2 bg-slate-50 flex items-center justify-around text-[11px] font-semibold text-slate-600 overflow-x-auto">
+        <!-- Mobile Quick Switcher Bar Berdasarkan Hak Akses -->
+        <div class="lg:hidden border-t border-slate-100 px-3 py-2 bg-slate-50 flex items-center justify-around text-[11px] font-semibold text-slate-600 overflow-x-auto">
             <a href="{{ route('tracking.index') }}" class="py-1 px-2 whitespace-nowrap {{ request()->routeIs('home', 'tracking.*') ? 'text-sky-600 font-bold' : '' }}">Tracking</a>
-            <a href="{{ route('admin.index') }}" class="py-1 px-2 whitespace-nowrap {{ request()->routeIs('admin.index') ? 'text-sky-600 font-bold' : '' }}">Kasir</a>
-            <a href="{{ route('teknisi.index') }}" class="py-1 px-2 whitespace-nowrap {{ request()->routeIs('teknisi.*') ? 'text-sky-600 font-bold' : '' }}">Teknisi</a>
-            <a href="{{ route('admin.pembayaran') }}" class="py-1 px-2 whitespace-nowrap {{ request()->routeIs('admin.pembayaran*') ? 'text-sky-600 font-bold' : '' }}">Bayar</a>
-            <a href="{{ route('admin.laporan') }}" class="py-1 px-2 whitespace-nowrap {{ request()->routeIs('admin.laporan*') ? 'text-sky-600 font-bold' : '' }}">Laporan</a>
+            @auth
+                @if(auth()->user()->isKasir() || auth()->user()->isOwner())
+                    <a href="{{ route('admin.index') }}" class="py-1 px-2 whitespace-nowrap {{ request()->routeIs('admin.index') ? 'text-sky-600 font-bold' : '' }}">Kasir</a>
+                    <a href="{{ route('admin.pembayaran') }}" class="py-1 px-2 whitespace-nowrap {{ request()->routeIs('admin.pembayaran*') ? 'text-sky-600 font-bold' : '' }}">Bayar</a>
+                @endif
+                @if(auth()->user()->isTeknisi() || auth()->user()->isOwner())
+                    <a href="{{ route('teknisi.index') }}" class="py-1 px-2 whitespace-nowrap {{ request()->routeIs('teknisi.*') ? 'text-sky-600 font-bold' : '' }}">Teknisi</a>
+                @endif
+                @if(auth()->user()->isOwner() || auth()->user()->isKasir())
+                    <a href="{{ route('admin.laporan') }}" class="py-1 px-2 whitespace-nowrap {{ request()->routeIs('admin.laporan*') ? 'text-sky-600 font-bold' : '' }}">Laporan</a>
+                @endif
+            @else
+                <a href="{{ route('login') }}" class="py-1 px-2 whitespace-nowrap text-sky-600 font-bold">Login Petugas &rarr;</a>
+            @endauth
         </div>
     </nav>
 
@@ -124,6 +189,15 @@
                         <span>Kirim Notifikasi WhatsApp Sekarang</span>
                     </a>
                 @endif
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="bg-rose-50 border border-rose-300 text-rose-800 px-4 py-3 rounded-xl flex items-center gap-2 text-sm shadow-sm mb-4">
+                <svg class="w-5 h-5 text-rose-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+                <span class="font-medium">{{ session('error') }}</span>
             </div>
         @endif
 
